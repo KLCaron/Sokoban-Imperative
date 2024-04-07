@@ -72,18 +72,18 @@ namespace Sokoban_Imperative
         */
         public static Stack<SokobanPuzzle> SolvePuzzle(SokobanPuzzle startState)
         {
-            Queue<SokobanPuzzle> queue = new Queue<SokobanPuzzle>();
-            HashSet<SokobanPuzzle> visited = new HashSet<SokobanPuzzle>();
+            Stack<SokobanPuzzle> stack = new Stack<SokobanPuzzle>();
+            HashSet<List<SokobanPuzzle>> visited = new HashSet<List<SokobanPuzzle>>();
             int permutations = 0;
-            
-            queue.Enqueue(startState);
-            visited.Add(startState);
 
-            while (queue.Count > 0)
+            stack.Push(startState);
+            visited.Add(new List<SokobanPuzzle> { startState });
+
+            while (stack.Count > 0)
             {
                 permutations++;
-                SokobanPuzzle current = queue.Dequeue();
-                
+                SokobanPuzzle current = stack.Pop();
+
                 if (current.IsSolved())
                 {
                     Console.Out.WriteLine(permutations);
@@ -92,15 +92,19 @@ namespace Sokoban_Imperative
 
                 foreach (SokobanPuzzle next in current.GetPossibleMoves())
                 {
-                    string nextState = next.ToString();
-                    //Console.Out.WriteLine(nextState);
                     if (!IsVisited(next, visited))
                     {
-                        queue.Enqueue(next);
-                        visited.Add(next);
+                        List<SokobanPuzzle> newPath = new List<SokobanPuzzle>();
+                        foreach (var state in visited)
+                        {
+                            newPath.AddRange(state);
+                        }
+                        newPath.Add(next);
+
+                        stack.Push(next);
+                        visited.Add(newPath);
                     }
                 }
-                
             }
             Console.Out.WriteLine(permutations);
             return new Stack<SokobanPuzzle>();
@@ -120,20 +124,28 @@ namespace Sokoban_Imperative
             return solutionPath;
         }
 
-        private static bool IsVisited(SokobanPuzzle state, HashSet<SokobanPuzzle> visited)
+        private static bool IsVisited(SokobanPuzzle state, HashSet<List<SokobanPuzzle>> visited)
         {
-            SokobanPuzzle current = state;
-            while (current != null)
+            foreach (var path in visited)
             {
-                if (!visited.Contains(current))
+                if (IsSamePath(path, state))
                 {
-                    return false;
+                    return true;
                 }
-
-                current = current.PreviousState;
             }
-
-            return true;
+            return false;
+        }
+        
+        private static bool IsSamePath(List<SokobanPuzzle> path, SokobanPuzzle state)
+        {
+            foreach (var s in path)
+            {
+                if (s.Equals(state))
+                {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 }
