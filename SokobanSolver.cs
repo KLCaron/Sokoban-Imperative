@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 
@@ -71,43 +72,68 @@ namespace Sokoban_Imperative
         */
         public static Stack<SokobanPuzzle> SolvePuzzle(SokobanPuzzle startState)
         {
-            Stack<SokobanPuzzle> stack = new Stack<SokobanPuzzle>();
-            HashSet<string> visited = new HashSet<string>();
+            Queue<SokobanPuzzle> queue = new Queue<SokobanPuzzle>();
+            HashSet<SokobanPuzzle> visited = new HashSet<SokobanPuzzle>();
+            int permutations = 0;
             
-            stack.Push(startState);
-            visited.Add(startState.ToString());
+            queue.Enqueue(startState);
+            visited.Add(startState);
 
-            while (stack.Count > 0)
+            while (queue.Count > 0)
             {
-                SokobanPuzzle current = stack.Peek();
-                //Console.WriteLine(current.ToString());
+                permutations++;
+                SokobanPuzzle current = queue.Dequeue();
                 
                 if (current.IsSolved())
                 {
-                    return stack;
+                    Console.Out.WriteLine(permutations);
+                    return ReconstructSolutionPath(current);
                 }
-
-                bool foundMove = false;
 
                 foreach (SokobanPuzzle next in current.GetPossibleMoves())
                 {
                     string nextState = next.ToString();
-                    if (!visited.Contains(nextState))
+                    //Console.Out.WriteLine(nextState);
+                    if (!IsVisited(next, visited))
                     {
-                        stack.Push(next);
-                        visited.Add(nextState);
-                        foundMove = true;
-                        break;
+                        queue.Enqueue(next);
+                        visited.Add(next);
                     }
                 }
-
-                if (!foundMove)
-                {
-                    stack.Pop();
-                }
+                
             }
-            
+            Console.Out.WriteLine(permutations);
             return new Stack<SokobanPuzzle>();
+        }
+
+        private static Stack<SokobanPuzzle> ReconstructSolutionPath(SokobanPuzzle finalState)
+        {
+            Stack<SokobanPuzzle> solutionPath = new Stack<SokobanPuzzle>();
+            SokobanPuzzle current = finalState;
+
+            while (current != null)
+            {
+                solutionPath.Push(current);
+                current = current.PreviousState;
+            }
+
+            return solutionPath;
+        }
+
+        private static bool IsVisited(SokobanPuzzle state, HashSet<SokobanPuzzle> visited)
+        {
+            SokobanPuzzle current = state;
+            while (current != null)
+            {
+                if (!visited.Contains(current))
+                {
+                    return false;
+                }
+
+                current = current.PreviousState;
+            }
+
+            return true;
         }
     }
 }

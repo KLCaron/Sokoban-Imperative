@@ -35,10 +35,18 @@ namespace Sokoban_Imperative
     public class SokobanPuzzle
     {
         private readonly TileType[,] _state;
+
+        private readonly SokobanPuzzle _previousState;
+        
         /*
         * Exposes the state of the puzzle.
         */
         public TileType[,] State => _state;
+        
+        /*
+         * Exposes the state of the previous puzzle.
+         */
+        public SokobanPuzzle PreviousState => _previousState;
         
         /*
         * Initializes a new instance of the SokobanPuzzle class with the provided initial state.
@@ -49,6 +57,12 @@ namespace Sokoban_Imperative
         public SokobanPuzzle(TileType[,] initialState)
         {
             _state = (TileType[,])initialState.Clone();
+        }
+
+        public SokobanPuzzle(TileType[,] initialState, SokobanPuzzle previousState = null)
+        {
+            _state = (TileType[,])initialState.Clone();
+            _previousState = previousState;
         }
 
         /*
@@ -93,7 +107,7 @@ namespace Sokoban_Imperative
 
                             if (IsValidMove(newX, newY, (Direction)k))
                             {
-                                SokobanPuzzle newMove = MovePLayer(i, j, newX, newY);
+                                SokobanPuzzle newMove = MovePlayer(i, j, newX, newY);
                                 if (IsBadMove(newX, newY, (Direction)k))
                                 {
                                     badMoves.Add(newMove);
@@ -145,7 +159,7 @@ namespace Sokoban_Imperative
 
                 if (behindTile == TileType.Wall || behindTile == TileType.Box || behindTile == TileType.BoxGoal)
                     return false;
-                
+
                 if (_state[behindRow, behindCol] != TileType.Goal)
                 {
                     bool frontBackWall = _state[behindRow + 1, behindCol] == TileType.Wall || 
@@ -196,7 +210,7 @@ namespace Sokoban_Imperative
         * Returns:
         *   A new SokobanPuzzle instance representing the puzzle state after the player has been moved.
         */
-        private SokobanPuzzle MovePLayer(int fromRow, int fromCol, int toRow, int toCol)
+        private SokobanPuzzle MovePlayer(int fromRow, int fromCol, int toRow, int toCol)
         {
             TileType[,] newState = (TileType[,])_state.Clone();
             
@@ -220,8 +234,10 @@ namespace Sokoban_Imperative
             // Update the source space
             newState[fromRow, fromCol] = newState[fromRow, fromCol] == TileType.PlayerGoal ? 
                 TileType.Goal : TileType.Empty;
-                        
-            return new SokobanPuzzle(newState);
+            
+            SokobanPuzzle newPuzzle = new SokobanPuzzle(newState, this);   
+            
+            return newPuzzle;
         }
 
         /*
